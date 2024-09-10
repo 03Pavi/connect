@@ -8,6 +8,10 @@ const pusher = new Pusher({
 });
 export async function POST(request: any) {
   const { message } = await request.json();
-  pusher.trigger("chat-channel", "new-message", { message });
-  return new Response("Message sent", { status: 200 });
+  pusher
+    .trigger("chat-channel", "new-message", { message })
+    .then(() => {
+      return new Response("Message sent", { status: 200 });
+    })
+    .catch((error) => console.error("Error sending message:", error));
 }
