@@ -12,29 +12,30 @@ import {
   Paper,
   IconButton,
 } from "@mui/material";
-import EmojiPicker from "emoji-picker-react";
-import InsertEmoticonIcon from "@mui/icons-material/InsertEmoticon";
+import EmojiPicker from 'emoji-picker-react';
+import InsertEmoticonIcon from '@mui/icons-material/InsertEmoticon';
 
 const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
   cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER as string,
   forceTLS: true,
 });
-console.log(
-  process.env.NEXT_PUBLIC_PUSHER_KEY,
-  process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
-  "bdjebcj"
-)
 Pusher.logToConsole = true;
 export default function Home() {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<string[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
+
   useEffect(() => {
     const channel = pusher.subscribe("chat-channel");
     channel.bind("new-message", (data: { message: string }) => {
       setMessages((prevMessages) => [...prevMessages, data.message]);
     });
+
+    return () => {
+      channel.unbind_all();
+      pusher.unsubscribe("chat-channel");
+    };
   }, []);
 
   useEffect(() => {

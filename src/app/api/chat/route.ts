@@ -7,12 +7,6 @@ const pusher = new Pusher({
   useTLS: true,
 });
 export async function POST(request: any) {
-  console.log({
-    appId: process.env.PUSHER_APP_ID,
-    key: process.env.PUSHER_KEY,
-    secret: process.env.PUSHER_SECRET,
-    cluster: process.env.PUSHER_CLUSTER,
-  });
   const { message } = await request.json();
   pusher.trigger("chat-channel", "new-message", { message });
   return new Response("Message sent", { status: 200 });
