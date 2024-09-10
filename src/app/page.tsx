@@ -25,18 +25,13 @@ export default function Home() {
   const [messages, setMessages] = useState<string[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
-
   useEffect(() => {
     const channel = pusher.subscribe("chat-channel");
     channel.bind("new-message", (data: { message: string }) => {
       setMessages((prevMessages) => [...prevMessages, data.message]);
     });
-
-    return () => {
-      channel.unbind_all();
-      pusher.unsubscribe("chat-channel");
-    };
   }, []);
+  
 
   useEffect(() => {
     if (chatEndRef.current) {
