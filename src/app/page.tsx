@@ -1,95 +1,101 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { useEffect, useState, useRef } from "react";
+import Pusher from "pusher-js";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  List,
+  ListItem,
+  Paper,
+} from "@mui/material";
+
+const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
+  cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER as string,
+});
 
 export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>src/app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [message, setMessage] = useState<string>("");
+  const [messages, setMessages] = useState<string[]>([]);
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+  useEffect(() => {
+    const channel = pusher.subscribe("chat-channel");
+    channel.bind("new-message", (data: { message: string }) => {
+      setMessages((prevMessages) => [...prevMessages, data.message]);
+    });
+
+    return () => {
+      channel.unbind_all();
+      pusher.unsubscribe("chat-channel");
+    };
+  }, []);
+
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
+
+  const sendMessage = async () => {
+    if (message) {
+      await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message }),
+      });
+      setMessage("");
+    }
+  };
+
+  return (
+    <Box display="flex" flexDirection="column" height="100vh" p={3}>
+      <Typography variant="h4" gutterBottom>
+        Connect
+      </Typography>
+      <Box
+        flex={1}
+        display="flex"
+        flexDirection="column-reverse"
+        mb={2}
+        p={2}
+        border={1}
+        borderColor="divider"
+        borderRadius={1}
+        overflow="auto"
+      >
+        <List>
+          {messages.map((msg, index) => (
+            <ListItem key={index} sx={{ mb: 1 }}>
+              <Paper elevation={2} sx={{ padding: 2, borderRadius: 1 }}>
+                <Typography variant="body1">{msg}</Typography>
+              </Paper>
+            </ListItem>
+          ))}
+          <div ref={chatEndRef} />
+        </List>
+      </Box>
+
+      <Box display="flex" alignItems="center" gap={2}>
+        <TextField
+          fullWidth
+          variant="outlined"
+          size="small"
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          placeholder="Type a message"
+          onKeyPress={(e) => {
+            if (e.key === "Enter") sendMessage();
+          }}
+        />
+        <Button variant="contained" color="primary" onClick={sendMessage}>
+          Send
+        </Button>
+      </Box>
+    </Box>
   );
 }
