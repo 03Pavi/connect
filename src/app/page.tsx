@@ -10,7 +10,10 @@ import {
   List,
   ListItem,
   Paper,
+  IconButton,
 } from "@mui/material";
+import EmojiPicker from 'emoji-picker-react';
+import InsertEmoticonIcon from '@mui/icons-material/InsertEmoticon';
 
 const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
   cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER as string,
@@ -19,6 +22,7 @@ const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
 export default function Home() {
   const [message, setMessage] = useState<string>("");
   const [messages, setMessages] = useState<string[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState<boolean>(false);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -50,6 +54,10 @@ export default function Home() {
       });
       setMessage("");
     }
+  };
+
+  const onEmojiClick = (emojiObject: any) => {
+    setMessage((prevMessage) => prevMessage + emojiObject.emoji);
   };
 
   return (
@@ -92,6 +100,14 @@ export default function Home() {
             if (e.key === "Enter") sendMessage();
           }}
         />
+        <IconButton onClick={() => setShowEmojiPicker((prev) => !prev)}>
+          <InsertEmoticonIcon />
+        </IconButton>
+        {showEmojiPicker && (
+          <Box position="absolute" bottom="70px">
+            <EmojiPicker onEmojiClick={onEmojiClick} />
+          </Box>
+        )}
         <Button variant="contained" color="primary" onClick={sendMessage}>
           Send
         </Button>
