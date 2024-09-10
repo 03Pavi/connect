@@ -21,7 +21,8 @@ const pusher = new Pusher(process.env.NEXT_PUBLIC_PUSHER_KEY as string, {
 });
 console.log(
   process.env.NEXT_PUBLIC_PUSHER_KEY,
-  process.env.NEXT_PUBLIC_PUSHER_CLUSTER
+  process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
+  "bdjebcj"
 )
 Pusher.logToConsole = true;
 export default function Home() {
